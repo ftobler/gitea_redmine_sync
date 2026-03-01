@@ -1,0 +1,40 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and start stack
+        working-directory: e2e
+        run: docker compose up -d --build
+
+      - name: Stream test output
+        working-directory: e2e
+        run: docker compose logs -f tests
+
+      - name: Check test exit code
+        working-directory: e2e
+        run: |
+          EXIT=$(docker inspect e2e-tests-1 --format '{{.State.ExitCode}}')
+          echo "pytest exit code: $EXIT"
+          exit "$EXIT"
+
+      - name: Dump service logs on failure
+        if: failure()
+        working-directory: e2e
+        run: |
+          echo "=== sync ===" && docker compose logs sync
+          echo "=== redmine ===" && docker compose logs redmine
+
+      - name: Tear down
+        if: always()
+        working-directory: e2e
+        run: docker compose down -v

@@ -1,0 +1,42 @@
+name: Docker Compose
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  startup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env
+        run: |
+          cat > .env <<'EOF'
+          REDMINE_URL=http://redmine-placeholder:3000
+          REDMINE_API_KEY=dummy-key-for-startup-test
+          GITEA_WEBHOOK_SECRET=
+          EOF
+
+      - name: Build and start
+        run: docker compose up -d --build
+
+      - name: Wait for service to be healthy
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost/ > /dev/null; then
+              echo "Service is up after $((i * 2))s"
+              exit 0
+            fi
+            echo "Attempt $i: not ready yet, retrying in 2s..."
+            sleep 2
+          done
+          echo "Service did not become healthy within 60s"
+          docker compose logs app
+          exit 1
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
