@@ -16,9 +16,9 @@ log = logging.getLogger(__name__)
 
 bp = Blueprint("webhook", __name__)
 
-# These are set by create_app() before the blueprint is used.
-_cache: RepoCache
-_queue: JobQueue
+# These are set by webhook_init() before any request is handled.
+_cache: RepoCache = None  # type: ignore[assignment]
+_queue: JobQueue = None  # type: ignore[assignment]
 
 
 def webhook_init(cache: RepoCache, queue: JobQueue) -> None:

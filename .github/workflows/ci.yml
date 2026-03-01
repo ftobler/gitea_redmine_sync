@@ -24,10 +24,10 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Lint (flake8)
-        run: flake8 src/ tests/
+        run: flake8 gitea_redmine_sync/ tests/
 
       - name: Type check (mypy)
-        run: mypy src/
+        run: mypy gitea_redmine_sync/
 
       - name: Test (pytest)
         run: pytest

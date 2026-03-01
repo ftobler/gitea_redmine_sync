@@ -46,9 +46,6 @@ def _sign(body: bytes, secret: str) -> str:
 
 def test_webhook_rejects_invalid_signature(client):
     with patch.object(webhook, "GITEA_WEBHOOK_SECRET", "mysecret"):
-        webhook.GITEA_WEBHOOK_SECRET  # noqa: B018 (just reference)
-        wh_secret_orig = webhook.GITEA_WEBHOOK_SECRET
-
         body = json.dumps(PUSH_PAYLOAD).encode()
         resp = client.post(
             "/hooks/gitea",

@@ -16,4 +16,3 @@ GITEA_WEBHOOK_SECRET: str = os.environ.get("GITEA_WEBHOOK_SECRET", "")
 RECONCILE_INTERVAL: int = int(os.environ.get("RECONCILE_INTERVAL", "3600"))
 
 CACHE_TTL: int = int(os.environ.get("CACHE_TTL", "300"))
-

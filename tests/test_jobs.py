@@ -41,5 +41,3 @@ def test_enqueue_all_repos_handles_cache_error():
     jobs = JobQueue(cache)
     jobs.enqueue_all_repos()  # must not raise
     assert jobs.size == 0
-
-
