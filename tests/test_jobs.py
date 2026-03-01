@@ -1,4 +1,4 @@
-"""Tests for JobQueue."""
+"""Tests for JobQueue — verifies both queue size and the content of enqueued jobs."""
 
 from unittest.mock import MagicMock
 
@@ -17,22 +17,40 @@ def _make_jobs():
     return JobQueue(cache), cache
 
 
-def test_enqueue_sync_adds_to_queue(sample_record):
+def test_enqueue_sync_produces_sync_tuple(sample_record):
     jobs, _ = _make_jobs()
     jobs.enqueue_sync(sample_record)
-    assert jobs.size == 1
+    job_type, payload = jobs.get()
+    assert job_type == "sync"
+    assert payload == sample_record
 
 
-def test_enqueue_cleanup_adds_to_queue():
+def test_enqueue_cleanup_produces_cleanup_tuple():
     jobs, _ = _make_jobs()
     jobs.enqueue_cleanup()
-    assert jobs.size == 1
+    job_type, payload = jobs.get()
+    assert job_type == "cleanup"
+    assert payload is None
 
 
-def test_enqueue_all_repos_adds_one_per_repo_plus_cleanup():
+def test_enqueue_all_repos_produces_sync_per_repo_then_cleanup():
     jobs, _ = _make_jobs()
     jobs.enqueue_all_repos()
-    assert jobs.size == 3  # 2 repos + 1 cleanup
+
+    seen_paths = set()
+    for _ in range(2):
+        job_type, payload = jobs.get()
+        assert job_type == "sync"
+        assert payload is not None
+        seen_paths.add(payload["fs_path"])
+
+    assert seen_paths == {"/repos/a.git", "/repos/b.git"}
+
+    job_type, payload = jobs.get()
+    assert job_type == "cleanup"
+    assert payload is None
+
+    assert jobs.size == 0
 
 
 def test_enqueue_all_repos_handles_cache_error():
@@ -41,3 +59,15 @@ def test_enqueue_all_repos_handles_cache_error():
     jobs = JobQueue(cache)
     jobs.enqueue_all_repos()  # must not raise
     assert jobs.size == 0
+
+
+def test_jobs_are_fifo(sample_record):
+    jobs, _ = _make_jobs()
+    record_a = {**sample_record, "fs_path": "/repos/a.git"}
+    record_b = {**sample_record, "fs_path": "/repos/b.git"}
+    jobs.enqueue_sync(record_a)
+    jobs.enqueue_sync(record_b)
+    _, first = jobs.get()
+    _, second = jobs.get()
+    assert first["fs_path"] == "/repos/a.git"
+    assert second["fs_path"] == "/repos/b.git"
