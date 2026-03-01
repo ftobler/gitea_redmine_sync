@@ -30,4 +30,4 @@ jobs:
         run: mypy gitea_redmine_sync/
 
       - name: Test (pytest)
-        run: pytest
+        run: pytest tests
