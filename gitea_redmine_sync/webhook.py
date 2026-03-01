@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import json
 import logging
+from pathlib import Path
 from typing import Optional
 
 from flask import Blueprint, Response, request, send_from_directory
@@ -12,14 +13,16 @@ from .cache import RepoCache
 from .config import GITEA_WEBHOOK_SECRET
 from .worker import JobQueue
 
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+
 log = logging.getLogger(__name__)
 
-bp = Blueprint("webhook", __name__, static_folder="../static", static_url_path="/static")
+bp = Blueprint("webhook", __name__)
 
 
 @bp.get("/")
 def index() -> Response:
-    return send_from_directory(bp.static_folder, "index.html")  # type: ignore[arg-type]
+    return send_from_directory(STATIC_DIR, "index.html")
 
 
 # These are set by webhook_init() before any request is handled.

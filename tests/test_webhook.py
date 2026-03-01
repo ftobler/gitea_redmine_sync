@@ -46,6 +46,16 @@ def _sign(body: bytes, secret: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# / static landing page
+# ---------------------------------------------------------------------------
+
+def test_index_returns_html(client):
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert b"Gitea" in resp.data
+
+
+# ---------------------------------------------------------------------------
 # /hooks/gitea — signature verification
 # ---------------------------------------------------------------------------
 

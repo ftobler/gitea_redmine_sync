@@ -8,7 +8,6 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY gitea_redmine_sync/ ./gitea_redmine_sync/
-COPY static/ ./static/
 
 RUN pip install --no-cache-dir .
 

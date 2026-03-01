@@ -32,6 +32,9 @@ gitea-redmine-sync = "gitea_redmine_sync.app:main"
 [tool.setuptools.packages.find]
 where = ["."]
 
+[tool.setuptools.package-data]
+gitea_redmine_sync = ["static/*"]
+
 # # ---------------------------------------------------------------------------
 # # pytest
 # # ---------------------------------------------------------------------------
