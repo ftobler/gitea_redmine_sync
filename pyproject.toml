@@ -12,7 +12,6 @@ license = { text = "MIT" }
 dependencies = [
     "flask>=3.0",
     "requests>=2.32",
-    "apscheduler>=3.10",
     "python-dotenv>=1.0",
     "waitress>=3.0",
 ]

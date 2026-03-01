@@ -72,12 +72,12 @@ def gitea_webhook() -> Response:
     return Response(status=202)
 
 
-@bp.get("/health")
-def health() -> dict[str, object]:
-    return {"ok": True, "queued": _queue.size}
+# @bp.get("/health")
+# def health() -> dict[str, object]:
+#     return {"ok": True, "queued": _queue.size}
 
 
-@bp.post("/admin/reconcile")
-def admin_reconcile() -> Response:
-    _queue.enqueue_all_repos(force_cache=True)
-    return Response(status=202)
+# @bp.post("/admin/reconcile")
+# def admin_reconcile() -> Response:
+#     _queue.enqueue_all_repos(force_cache=True)
+#     return Response(status=202)

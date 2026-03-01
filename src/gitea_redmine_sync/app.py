@@ -2,8 +2,8 @@
 
 import logging
 import threading
+import time
 
-from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask
 from waitress import serve
 
@@ -25,17 +25,19 @@ def create_app(cache: RepoCache, queue: JobQueue) -> Flask:
     return app
 
 
+def reconcile_loop_thread(queue) -> None:
+    while True:
+        time.sleep(RECONCILE_INTERVAL)
+        queue.enqueue_all_repos()
+
+
 def main() -> None:
     cache = RepoCache()
     queue = JobQueue(cache)
     app = create_app(cache, queue)
 
     threading.Thread(target=worker_thread, args=(queue, cache), daemon=True, name="sync-worker").start()
-
-    # create a periodic event on the queue
-    scheduler = BackgroundScheduler(daemon=True)
-    scheduler.add_job(queue.enqueue_all_repos, "interval", seconds=RECONCILE_INTERVAL)
-    scheduler.start()
+    threading.Thread(target=reconcile_loop_thread, args=(queue,), daemon=True, name="reconcile").start()
 
     log.info("Startup: enqueueing all repos for initial sync")
     queue.enqueue_all_repos(force_cache=True)

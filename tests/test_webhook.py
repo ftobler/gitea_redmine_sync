@@ -28,16 +28,16 @@ def _sign(body: bytes, secret: str) -> str:
 # /health
 # ---------------------------------------------------------------------------
 
-def test_health_returns_ok(client, app):
-    queue: MagicMock = MagicMock()
-    queue.size = 0
-    app.extensions["queue"] = queue
-    webhook._queue = queue
+# def test_health_returns_ok(client, app):
+#     queue: MagicMock = MagicMock()
+#     queue.size = 0
+#     app.extensions["queue"] = queue
+#     webhook._queue = queue
 
-    resp = client.get("/health")
-    assert resp.status_code == 200
-    data = resp.get_json()
-    assert data["ok"] is True
+#     resp = client.get("/health")
+#     assert resp.status_code == 200
+#     data = resp.get_json()
+#     assert data["ok"] is True
 
 
 # ---------------------------------------------------------------------------
@@ -136,10 +136,10 @@ def test_webhook_returns_400_on_bad_json(client):
 # /admin/reconcile
 # ---------------------------------------------------------------------------
 
-def test_admin_reconcile_triggers_enqueue(client):
-    mock_jobs = MagicMock()
-    webhook._queue = mock_jobs
+# def test_admin_reconcile_triggers_enqueue(client):
+#     mock_jobs = MagicMock()
+#     webhook._queue = mock_jobs
 
-    resp = client.post("/admin/reconcile")
-    assert resp.status_code == 202
-    mock_jobs.enqueue_all_repos.assert_called_once_with(force_cache=True)
+#     resp = client.post("/admin/reconcile")
+#     assert resp.status_code == 202
+#     mock_jobs.enqueue_all_repos.assert_called_once_with(force_cache=True)
