@@ -28,14 +28,17 @@ class RepoCache:
         by_path: dict[str, RepoRecord] = {}
         for project in r.json().get("projects", []):
             for repo in project.get("repositories", []):
+                # NOTE: the API does not provide a Gitea clone URL — "url" is
+                # not a documented field. This needs clarification before the
+                # webhook-to-repo lookup (by_clone_url) can work correctly.
                 clone_url = repo.get("url", "").rstrip("/")
-                fs_path = repo.get("root_url", "").rstrip("/")
-                if not clone_url or not fs_path:
+                fs_path = repo.get("path", "").rstrip("/")  # API field: "path"
+                if not fs_path:
                     continue
                 record: RepoRecord = {
                     "clone_url": clone_url,
                     "fs_path": fs_path,
-                    "project": project.get("identifier", ""),
+                    "project": project.get("name", ""),  # API field: "name"
                 }
                 by_clone_url[clone_url] = record
                 by_path[fs_path] = record
@@ -46,7 +49,7 @@ class RepoCache:
     def get(self, force: bool = False) -> tuple[dict[str, RepoRecord], dict[str, RepoRecord]]:
         with self._lock:
             age = time() - self._ts
-            if force or not self._by_clone_url or age > CACHE_TTL:
+            if force or not self._by_path or age > CACHE_TTL:
                 log.info("Fetching Redmine repo list (age=%.0fs)", age)
                 self._by_clone_url, self._by_path = self._fetch_and_parse()
                 self._ts = time()

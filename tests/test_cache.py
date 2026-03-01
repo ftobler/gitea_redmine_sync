@@ -5,14 +5,24 @@ from unittest.mock import MagicMock, patch
 from gitea_redmine_sync.cache import RepoCache
 
 
+# Matches the actual GET /repositories.json response from redmine_repository_api.
+# Fields per the API docs:
+#   project: id (int), name (str)
+#   repo:    id (int), name (str), type (str), path (str)
+# NOTE: "url" (Gitea clone URL) is NOT a documented API field — its absence
+#       means the by_clone_url index cannot currently be populated from real
+#       API data. Needs clarification.
 REDMINE_RESPONSE = {
     "projects": [
         {
-            "identifier": "myproject",
+            "id": 1,
+            "name": "My Project",
             "repositories": [
                 {
-                    "url": "http://gitea.test/owner/repo.git",
-                    "root_url": "/repos/owner/repo.git",
+                    "id": 1,
+                    "name": "Main repository",
+                    "type": "Repository::Git",
+                    "path": "/repos/owner/repo.git",
                 }
             ],
         }
@@ -28,13 +38,19 @@ def _mock_get(response_json: dict) -> MagicMock:
 
 
 @patch("gitea_redmine_sync.cache.requests.get")
-def test_get_populates_both_indexes(mock_get):
+def test_get_populates_by_path_index(mock_get):
     mock_get.return_value = _mock_get(REDMINE_RESPONSE)
     c = RepoCache()
-    by_url, by_path = c.get()
-
-    assert "http://gitea.test/owner/repo.git" in by_url
+    _, by_path = c.get()
     assert "/repos/owner/repo.git" in by_path
+
+
+@patch("gitea_redmine_sync.cache.requests.get")
+def test_record_contains_project_name(mock_get):
+    mock_get.return_value = _mock_get(REDMINE_RESPONSE)
+    c = RepoCache()
+    _, by_path = c.get()
+    assert by_path["/repos/owner/repo.git"]["project"] == "My Project"
 
 
 @patch("gitea_redmine_sync.cache.requests.get")
@@ -66,14 +82,14 @@ def test_invalidate_causes_refetch(mock_get):
 
 
 @patch("gitea_redmine_sync.cache.requests.get")
-def test_skips_repos_with_missing_url_or_path(mock_get):
+def test_skips_repos_with_missing_path(mock_get):
     response = {
         "projects": [
             {
-                "identifier": "p",
+                "id": 2,
+                "name": "Empty Project",
                 "repositories": [
-                    {"url": "", "root_url": "/some/path"},
-                    {"url": "http://gitea.test/repo.git", "root_url": ""},
+                    {"id": 1, "name": "repo", "type": "Repository::Git", "path": ""},
                 ],
             }
         ]
@@ -81,5 +97,4 @@ def test_skips_repos_with_missing_url_or_path(mock_get):
     mock_get.return_value = _mock_get(response)
     c = RepoCache()
     by_url, by_path = c.get()
-    assert len(by_url) == 0
     assert len(by_path) == 0
