@@ -1,0 +1,18 @@
+FROM python:3.13-slim
+
+# git is needed for push operations in the sync tests.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Suppress git credential prompts (we always pass auth in the URL).
+ENV GIT_TERMINAL_PROMPT=0
+
+WORKDIR /tests
+
+COPY tests/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY tests/ .
+
+CMD ["pytest", "-v", "-s"]

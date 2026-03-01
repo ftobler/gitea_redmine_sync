@@ -1,0 +1,29 @@
+ARG REDMINE_VERSION=6.1
+FROM redmine:${REDMINE_VERSION}
+
+# curl is needed for the healthcheck; git to clone the plugin.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install the redmine_repository_api plugin.
+RUN git clone --depth 1 https://github.com/ftobler/redmine_repository_api.git \
+    /usr/src/redmine/plugins/redmine_repository_api
+
+# ── Design-gap bridge ────────────────────────────────────────────────────────
+# The plugin's controller renders repositories as:
+#   { id, name, type, path: repo.url }
+# where `repo.url` is the *filesystem* path of the bare git repo.
+# It does NOT expose a Gitea clone URL, so the sync service's by_clone_url
+# lookup (used by the webhook handler) would always be empty.
+#
+# Fix: also emit `url: repo.root_url`.  The bootstrap script stores the Gitea
+# HTTP clone URL in the `root_url` DB column (unused by vanilla Redmine/Git),
+# giving the sync service both the fs-path (path) and the clone URL (url).
+RUN sed -i \
+    's/path: repo\.url/path: repo.url,\n            url:  repo.root_url/' \
+    /usr/src/redmine/plugins/redmine_repository_api/app/controllers/repository_api_controller.rb
+
+RUN gosu redmine bundle install \
+    && chmod -R ugo=rwX Gemfile.lock "$GEM_HOME" \
+    && rm -rf ~redmine/.bundle

@@ -25,7 +25,13 @@ def sync_repo(record: RepoRecord) -> None:
 
     if path.exists() and (path / "HEAD").exists():
         log.info("[sync] fetch %s", fs_path)
-        _git_command("fetch", "--all", "--prune", cwd=fs_path)
+        _git_command(
+            "fetch", "origin",
+            "+refs/heads/*:refs/heads/*",
+            "+refs/tags/*:refs/tags/*",
+            "--prune",
+            cwd=fs_path,
+        )
     else:
         log.info("[sync] clone %s -> %s", clone_url, fs_path)
         path.parent.mkdir(parents=True, exist_ok=True)
