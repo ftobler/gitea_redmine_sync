@@ -1,0 +1,21 @@
+[flake8]
+max-line-length = 280
+extend-ignore =
+    # whitespace before ':'  (conflicts with black-style slice formatting)
+    E203,
+    # line too long (handled by max-line-length above)
+    E501,
+    # multiple spaces before operator
+    E221
+exclude =
+    .git,
+    __pycache__,
+    .mypy_cache,
+    .pytest_cache,
+    dist,
+    build,
+    *.egg-info,
+per-file-ignores =
+    # Allow unused imports in __init__ re-exports
+    src/gitea_redmine_sync/__init__.py: F401
+

@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gitea-redmine-sync"
+version = "0.1.0"
+description = "Flask webhook receiver that keeps Redmine bare git repos in sync with Gitea"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "flask>=3.0",
+    "requests>=2.32",
+    "apscheduler>=3.10",
+    "python-dotenv>=1.0",
+    "waitress>=3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "mypy>=1.10",
+    "flake8>=7.0",
+    "types-waitress",
+    "types-requests",
+]
+
+[project.scripts]
+gitea-redmine-sync = "gitea_redmine_sync.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# # ---------------------------------------------------------------------------
+# # pytest
+# # ---------------------------------------------------------------------------
+# [tool.pytest.ini_options]
+# testpaths = ["tests"]
+# addopts = "-v --tb=short"
+
+# # ---------------------------------------------------------------------------
+# # coverage
+# # ---------------------------------------------------------------------------
+# [tool.coverage.run]
+# source = ["src/gitea_redmine_sync"]
+# branch = true
+
+# [tool.coverage.report]
+# show_missing = true
+# skip_covered = false
+# fail_under = 80
