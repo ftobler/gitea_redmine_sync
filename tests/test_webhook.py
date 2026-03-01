@@ -9,12 +9,14 @@ from unittest.mock import MagicMock, patch
 from gitea_redmine_sync import webhook
 
 
+# a example cache record
 SAMPLE_RECORD = {
     "clone_url": "http://gitea.test/owner/repo.git",
     "fs_path": "/repos/owner/repo.git",
     "project": "owner",
 }
 
+# a example webhok request
 PUSH_PAYLOAD = {
     "repository": {"clone_url": "http://gitea.test/owner/repo.git"},
 }
