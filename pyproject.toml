@@ -30,7 +30,7 @@ dev = [
 gitea-redmine-sync = "gitea_redmine_sync.app:main"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["gitea_redmine_sync"]
 
 # # ---------------------------------------------------------------------------
 # # pytest
