@@ -9,9 +9,8 @@ from waitress import serve
 
 from .cache import RepoCache
 from .config import RECONCILE_INTERVAL
-from .jobs import JobQueue
 from .webhook import bp, webhook_init
-from .worker import worker_thread
+from .worker import JobQueue, worker_thread
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)

@@ -10,7 +10,7 @@ from flask import Blueprint, Response, request
 
 from .cache import RepoCache
 from .config import GITEA_WEBHOOK_SECRET
-from .jobs import JobQueue
+from .worker import JobQueue
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ def gitea_webhook() -> Response:
 
 @bp.get("/health")
 def health() -> dict[str, object]:
-    return {"ok": True, "queued": len(_queue.pending)}
+    return {"ok": True, "queued": _queue.size}
 
 
 @bp.post("/admin/reconcile")

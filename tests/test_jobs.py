@@ -1,10 +1,8 @@
 """Tests for JobQueue."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
-
-from gitea_redmine_sync.jobs import JobQueue
+from gitea_redmine_sync.worker import JobQueue
 
 
 def _make_jobs():
@@ -19,40 +17,22 @@ def _make_jobs():
     return JobQueue(cache), cache
 
 
-def test_enqueue_sync_returns_true_first_time(sample_record):
-    jobs, _ = _make_jobs()
-    assert jobs.enqueue_sync(sample_record) is True
-
-
-def test_enqueue_sync_deduplicates(sample_record):
+def test_enqueue_sync_adds_to_queue(sample_record):
     jobs, _ = _make_jobs()
     jobs.enqueue_sync(sample_record)
-    assert jobs.enqueue_sync(sample_record) is False
+    assert jobs.size == 1
 
 
-def test_task_done_allows_reenqueue(sample_record):
-    jobs, _ = _make_jobs()
-    jobs.enqueue_sync(sample_record)
-    jobs.task_done(sample_record["clone_url"])
-    assert jobs.enqueue_sync(sample_record) is True
-
-
-def test_enqueue_cleanup_deduplicates():
+def test_enqueue_cleanup_adds_to_queue():
     jobs, _ = _make_jobs()
     jobs.enqueue_cleanup()
-    jobs.enqueue_cleanup()
-    pending = jobs.pending
-    assert "__cleanup__" in pending
-    assert sum(1 for k in pending if k == "__cleanup__") == 1
+    assert jobs.size == 1
 
 
-def test_enqueue_all_repos_enqueues_per_repo_and_cleanup():
-    jobs, cache = _make_jobs()
+def test_enqueue_all_repos_adds_one_per_repo_plus_cleanup():
+    jobs, _ = _make_jobs()
     jobs.enqueue_all_repos()
-    pending = jobs.pending
-    assert "http://gitea.test/a.git" in pending
-    assert "http://gitea.test/b.git" in pending
-    assert "__cleanup__" in pending
+    assert jobs.size == 3  # 2 repos + 1 cleanup
 
 
 def test_enqueue_all_repos_handles_cache_error():
@@ -60,13 +40,6 @@ def test_enqueue_all_repos_handles_cache_error():
     cache.get.side_effect = RuntimeError("network error")
     jobs = JobQueue(cache)
     jobs.enqueue_all_repos()  # must not raise
-    assert len(jobs.pending) == 0
+    assert jobs.size == 0
 
 
-def test_pending_returns_copy(sample_record):
-    jobs, _ = _make_jobs()
-    jobs.enqueue_sync(sample_record)
-    p1 = jobs.pending
-    p2 = jobs.pending
-    assert p1 == p2
-    assert p1 is not p2

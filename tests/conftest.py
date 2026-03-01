@@ -10,7 +10,7 @@ os.environ.setdefault("GITEA_WEBHOOK_SECRET", "")
 
 from gitea_redmine_sync.app import create_app  # noqa: E402
 from gitea_redmine_sync.cache import RepoCache  # noqa: E402
-from gitea_redmine_sync.jobs import JobQueue    # noqa: E402
+from gitea_redmine_sync.worker import JobQueue  # noqa: E402
 
 
 @pytest.fixture()

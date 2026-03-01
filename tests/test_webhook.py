@@ -30,7 +30,7 @@ def _sign(body: bytes, secret: str) -> str:
 
 def test_health_returns_ok(client, app):
     queue: MagicMock = MagicMock()
-    queue.pending = set()
+    queue.size = 0
     app.extensions["queue"] = queue
     webhook._queue = queue
 
