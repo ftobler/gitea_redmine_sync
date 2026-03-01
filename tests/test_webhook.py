@@ -23,6 +23,9 @@ PUSH_PAYLOAD = {
 
 
 def _sign(body: bytes, secret: str) -> str:
+    # Gitea sends HMAC-SHA256 as "sha256=<hex>" matching GitHub convention.
+    # NOTE: the official Gitea webhook docs PHP example compares without the
+    # "sha256=" prefix — that example appears to be simplified/incorrect.
     return "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
 
 
@@ -45,6 +48,18 @@ def _sign(body: bytes, secret: str) -> str:
 # ---------------------------------------------------------------------------
 # /hooks/gitea — signature verification
 # ---------------------------------------------------------------------------
+
+def test_webhook_accepts_valid_signature(client):
+    body = json.dumps(PUSH_PAYLOAD).encode()
+    with patch.object(webhook, "GITEA_WEBHOOK_SECRET", "mysecret"):
+        resp = client.post(
+            "/hooks/gitea",
+            data=body,
+            content_type="application/json",
+            headers={"X-Gitea-Event": "create", "X-Gitea-Signature": _sign(body, "mysecret")},
+        )
+        assert resp.status_code == 202  # accepted (non-push event, but sig passed)
+
 
 def test_webhook_rejects_invalid_signature(client):
     with patch.object(webhook, "GITEA_WEBHOOK_SECRET", "mysecret"):
