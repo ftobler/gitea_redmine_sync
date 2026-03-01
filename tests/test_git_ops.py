@@ -45,7 +45,13 @@ def test_sync_repo_fetches_when_exists(tmp_path, sample_record):
 
     with patch("gitea_redmine_sync.git_ops._git_command") as mock_git:
         sync_repo(sample_record)
-        mock_git.assert_called_once_with("fetch", "--all", "--prune", cwd=str(repo_path))
+        mock_git.assert_called_once_with(
+            "fetch", "origin",
+            "+refs/heads/*:refs/heads/*",
+            "+refs/tags/*:refs/tags/*",
+            "--prune",
+            cwd=str(repo_path),
+        )
 
 
 # ---------------------------------------------------------------------------
