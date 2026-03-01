@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Optional
 
-from flask import Blueprint, Response, request
+from flask import Blueprint, Response, request, send_from_directory
 
 from .cache import RepoCache
 from .config import GITEA_WEBHOOK_SECRET
@@ -14,7 +14,13 @@ from .worker import JobQueue
 
 log = logging.getLogger(__name__)
 
-bp = Blueprint("webhook", __name__)
+bp = Blueprint("webhook", __name__, static_folder="../static", static_url_path="/static")
+
+
+@bp.get("/")
+def index() -> Response:
+    return send_from_directory(bp.static_folder, "index.html")  # type: ignore[arg-type]
+
 
 # These are set by webhook_init() before any request is handled.
 _cache: RepoCache = None  # type: ignore[assignment]
