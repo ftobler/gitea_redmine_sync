@@ -18,13 +18,13 @@ bp = Blueprint("webhook", __name__)
 
 # These are set by create_app() before the blueprint is used.
 _cache: RepoCache
-_jobs: JobQueue
+_queue: JobQueue
 
 
-def webhook_init(cache: RepoCache, jobs: JobQueue) -> None:
-    global _cache, _jobs
+def webhook_init(cache: RepoCache, queue: JobQueue) -> None:
+    global _cache, _queue
     _cache = cache
-    _jobs = jobs
+    _queue = queue
 
 
 def _verify_signature(body: bytes, header: Optional[str]) -> bool:
@@ -68,16 +68,16 @@ def gitea_webhook() -> Response:
         log.info("Ignoring push for repo not in Redmine: %s", clone_url)
         return Response(status=202)
 
-    _jobs.enqueue_sync(record)
+    _queue.enqueue_sync(record)
     return Response(status=202)
 
 
 @bp.get("/health")
 def health() -> dict[str, object]:
-    return {"ok": True, "queued": len(_jobs.pending)}
+    return {"ok": True, "queued": len(_queue.pending)}
 
 
 @bp.post("/admin/reconcile")
 def admin_reconcile() -> Response:
-    _jobs.enqueue_all_repos(force_cache=True)
+    _queue.enqueue_all_repos(force_cache=True)
     return Response(status=202)

@@ -29,10 +29,10 @@ def _sign(body: bytes, secret: str) -> str:
 # ---------------------------------------------------------------------------
 
 def test_health_returns_ok(client, app):
-    jobs: MagicMock = MagicMock()
-    jobs.pending = set()
-    app.extensions["jobs"] = jobs
-    webhook._jobs = jobs
+    queue: MagicMock = MagicMock()
+    queue.pending = set()
+    app.extensions["queue"] = queue
+    webhook._queue = queue
 
     resp = client.get("/health")
     assert resp.status_code == 200
@@ -47,8 +47,7 @@ def test_health_returns_ok(client, app):
 def test_webhook_rejects_invalid_signature(client):
     with patch.object(webhook, "GITEA_WEBHOOK_SECRET", "mysecret"):
         webhook.GITEA_WEBHOOK_SECRET  # noqa: B018 (just reference)
-        import gitea_redmine_sync.webhook as wh
-        wh_secret_orig = wh.GITEA_WEBHOOK_SECRET
+        wh_secret_orig = webhook.GITEA_WEBHOOK_SECRET
 
         body = json.dumps(PUSH_PAYLOAD).encode()
         resp = client.post(
@@ -83,10 +82,10 @@ def test_webhook_enqueues_known_repo(client):
         {"http://gitea.test/owner/repo.git": SAMPLE_RECORD},
         {},
     )
-    mock_jobs = MagicMock()
+    mock_queue = MagicMock()
 
     webhook._cache = mock_cache
-    webhook._jobs = mock_jobs
+    webhook._queue = mock_queue
 
     with patch("gitea_redmine_sync.webhook.GITEA_WEBHOOK_SECRET", ""):
         resp = client.post(
@@ -97,7 +96,7 @@ def test_webhook_enqueues_known_repo(client):
         )
 
     assert resp.status_code == 202
-    mock_jobs.enqueue_sync.assert_called_once_with(SAMPLE_RECORD)
+    mock_queue.enqueue_sync.assert_called_once_with(SAMPLE_RECORD)
 
 
 def test_webhook_ignores_unknown_repo(client):
@@ -108,7 +107,7 @@ def test_webhook_ignores_unknown_repo(client):
     mock_jobs = MagicMock()
 
     webhook._cache = mock_cache
-    webhook._jobs = mock_jobs
+    webhook._queue = mock_jobs
 
     with patch("gitea_redmine_sync.webhook.GITEA_WEBHOOK_SECRET", ""):
         resp = client.post(
@@ -139,7 +138,7 @@ def test_webhook_returns_400_on_bad_json(client):
 
 def test_admin_reconcile_triggers_enqueue(client):
     mock_jobs = MagicMock()
-    webhook._jobs = mock_jobs
+    webhook._queue = mock_jobs
 
     resp = client.post("/admin/reconcile")
     assert resp.status_code == 202

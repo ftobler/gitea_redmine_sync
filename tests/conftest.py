@@ -15,7 +15,9 @@ from gitea_redmine_sync.jobs import JobQueue    # noqa: E402
 
 @pytest.fixture()
 def app():
-    application = create_app()
+    cache = RepoCache()
+    queue = JobQueue(cache)
+    application = create_app(cache, queue)
     application.config["TESTING"] = True
     return application
 

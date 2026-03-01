@@ -32,7 +32,7 @@ def test_git_raises_on_nonzero_exit():
 
 def test_sync_repo_clones_when_missing(tmp_path, sample_record):
     sample_record["fs_path"] = str(tmp_path / "repo.git")
-    with patch("gitea_redmine_sync.git_ops._git") as mock_git:
+    with patch("gitea_redmine_sync.git_ops._git_command") as mock_git:
         sync_repo(sample_record)
         mock_git.assert_called_once_with("clone", "--bare", sample_record["clone_url"], sample_record["fs_path"])
 
@@ -43,7 +43,7 @@ def test_sync_repo_fetches_when_exists(tmp_path, sample_record):
     (repo_path / "HEAD").touch()
     sample_record["fs_path"] = str(repo_path)
 
-    with patch("gitea_redmine_sync.git_ops._git") as mock_git:
+    with patch("gitea_redmine_sync.git_ops._git_command") as mock_git:
         sync_repo(sample_record)
         mock_git.assert_called_once_with("fetch", "--all", "--prune", cwd=str(repo_path))
 
