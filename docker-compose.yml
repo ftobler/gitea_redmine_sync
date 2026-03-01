@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    # The repo paths written by sync_repo come from Redmine's "path" field.
+    # Mount the same base directory here so paths match what Redmine expects.
+    volumes:
+      - ./repos:/repos
+    ports:
+      - "80:8000"  # HTTP
+
+  caddy:
+    image: caddy:latest
+    ports:
+      - "443:443"  # HTTPS
+    command: caddy reverse-proxy --from https://localhost:443 --to app:8000 --internal-certs
+    depends_on:
+      - app
